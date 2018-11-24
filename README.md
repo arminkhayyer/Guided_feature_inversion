@@ -28,7 +28,7 @@ to use the second algorithm, you need to specify image directory as well as the 
 
 <img src="https://github.com/arminkhayyer/pytorch/blob/armin/generated/Inv_Image_Layer_11.jpg"> </img> output saliency image
 
-<img src="https://github.com/arminkhayyer/pytorch/blob/armin/generated/heatmap_11.png"> </img> output heat map 
+<img src="https://github.com/arminkhayyer/pytorch/blob/armin/generated/heatmap_discriminative11.png"> </img> output heat map 
 
 
 
