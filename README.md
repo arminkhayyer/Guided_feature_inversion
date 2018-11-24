@@ -16,7 +16,7 @@ The second step will find the class discriminative mask for the target object fr
 
 to use the second algorithm, you need to specify image directory as well as the target class of the input image, since VGG19 is used and VGG19 is trained over ImageNet dataset, you can find the target class for each image from [here](https://gist.github.com/yrevar/942d3a0ac09ec9e5eb3a). the output of the second algorithm will be a heat-map and a mask for the target class. 
 
-<img src="https://github.com/arminkhayyer/pytorch/blob/armin/11.jpg"> </img> input image(target class elephant: 386, zebra: 340)
+<img src="https://github.com/arminkhayyer/pytorch/blob/armin/input_images/11.jpg"> </img> input image(target class elephant: 386, zebra: 340)
 
 <h1 style="color:red;">first algorithm results </h1>
 
