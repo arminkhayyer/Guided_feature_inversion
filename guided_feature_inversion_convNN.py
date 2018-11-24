@@ -212,7 +212,7 @@ class Vgg19():
 
 if __name__ == '__main__':
     # Get params
-    original_image_dir = "eagle.jpg"
+    original_image_dir = "11.jpg"
     original_image = preprocess_image(original_image_dir)
     gussian_blur = find_gussian_blur(cv2.imread(original_image_dir))
 
@@ -231,29 +231,29 @@ if __name__ == '__main__':
     for c in range(3):
         recreated_im[c] /= reverse_std[c]
         recreated_im[c] -= reverse_mean[c]
-    #recreated_im[recreated_im > 0] = 1
-    #recreated_im[recreated_im < 0] = 0
+    #recreated_im[recreated_im > .5] = 1
+    #recreated_im[recreated_im < .5] = 0
     recreated_im = np.round(recreated_im  * 400)
-
     recreated_im = np.uint8(recreated_im).transpose(1, 2, 0)
-    # Convert RBG to GBR
-    #recreated_im = recreated_im[..., ::-1]
-    #print(torch.squeeze(mask[:,1,:,:], 0))
-    color_map = mpl_color_map.get_cmap('hsv_r')
-    heatmap = color_map(torch.squeeze(mask[:,1,:,:], 0).detach())
 
+    mask_heatmap= copy.copy(mask.data.numpy()[0])
+    #for c in range(3):
+     #   mask_heatmap[c] /= reverse_std[c]
+    #    mask_heatmap[c] -= reverse_mean[c]
+
+    color_map = mpl_color_map.get_cmap('hsv_r')
+    heatmap = color_map(mask_heatmap[0, :,:])
     heatmap[:, :, 3] = 0.5
     heatmap = Image.fromarray((heatmap * 255).astype("uint8"))
+    heatmap.save("generated/heatmap_"+ original_image_dir[:-4]+".png")
 
-    heatmap.save("heatmap.png")
 
-    #mask = torch.squeeze(mask, 0).permute(2, 1, 0).detach().numpy()
 
-    cv2.imwrite('generated/Inv_Image_Layer.jpg', recreated_im)
-    cv2.imwrite("generated/gusblur.jpg", gussian_blur.numpy())
-    cv2.imwrite("generated/inv_image.jpg", recreated_im[:, :, 2])
-    cv2.imwrite("generated/background_mask.jpg", recreate_image(1-mask))
-    cv2.imwrite("generated/inverteddd_image.jpg", new_image_rep.detach().numpy())
+    cv2.imwrite('generated/Inv_Image_Layer_' + original_image_dir, recreated_im)
+    cv2.imwrite("generated/gusblur_"+ original_image_dir, gussian_blur.numpy())
+    cv2.imwrite("generated/inv_image_"+ original_image_dir, recreated_im[:, :, 2])
+    cv2.imwrite("generated/background_mask_" + original_image_dir, recreate_image(1-mask))
+
 
 
 

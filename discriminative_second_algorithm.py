@@ -117,9 +117,9 @@ class Disciminative_vgg19():
 
 if __name__ == '__main__':
     # Get params
-    original_image_dir = "truck.jpg"
+    original_image_dir = "11.jpg"
     original_image = preprocess_image(original_image_dir)
-    target_class = 385
+    target_class = 340
     gussian_blur = find_gussian_blur(cv2.imread(original_image_dir))
 
     final_mask = Disciminative_vgg19()
@@ -140,24 +140,19 @@ if __name__ == '__main__':
     #recreated_im[recreated_im > 0] = 1
     #recreated_im[recreated_im < 0] = 0
     recreated_im = np.round(recreated_im  * 400)
-
     recreated_im = np.uint8(recreated_im).transpose(1, 2, 0)
-    # Convert RBG to GBR
-    #recreated_im = recreated_im[..., ::-1]
-    #print(torch.squeeze(mask[:,1,:,:], 0))
+
+
+    mask_heatmap = copy.copy(mask.data.numpy()[0])
     color_map = mpl_color_map.get_cmap('hsv_r')
-    heatmap = color_map(torch.squeeze(mask[:,1,:,:], 0).detach())
+    heatmap = color_map(mask_heatmap[0, :, :])
     heatmap[:, :, 3] = 0.5
     heatmap = Image.fromarray((heatmap * 255).astype("uint8"))
+    heatmap.save("generated/heatmap_discriminative" + original_image_dir[:-4] + ".png")
 
-    heatmap.save("heatmap2nd.png")
-
-    #mask = torch.squeeze(mask, 0).permute(2, 1, 0).detach().numpy()
-
-    cv2.imwrite('generated/Inv_Image_Layer_2nd.jpg', recreated_im)
-
-    cv2.imwrite("generated/inv_image_2nd.jpg", recreated_im[:, :, 2])
-    cv2.imwrite("generated/background_mask.jpg", recreate_image(1-mask))
+    cv2.imwrite('generated/Inv_Image_Layer_2nd' + original_image_dir, recreated_im)
+    cv2.imwrite("generated/inv_image_2nd" + original_image_dir, recreated_im[:, :, 2])
+    cv2.imwrite("generated/background_mask_2nd" + original_image_dir, recreate_image(1 - mask))
 
 
 
