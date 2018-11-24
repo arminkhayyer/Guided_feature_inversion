@@ -47,6 +47,7 @@ class Disciminative_vgg19():
 
         m_mask = torch.zeros(14, 14)
         for i, key in enumerate(base_layer):
+
             for j, b in enumerate(key):
                 m_mask += weights[j] * b
         # min-max-scaling
@@ -67,28 +68,34 @@ class Disciminative_vgg19():
     def discriminative_mask_and_weights(self, input_image, gussian_blur, target_class):
 
         weights = Vgg19().optmize_mask_and_weights(input_image=input_image, gussian_blur=gussian_blur)
-        print("weights second alg init 1", weights.sum())
         W_weights = Variable(weights, requires_grad = True)
-        print("weights second alg init 2", W_weights.sum())
         learining_rate = 0.01
 
         for i in range(70):
             optimizer = torch.optim.Adam([W_weights], lr= learining_rate)
             optimizer.zero_grad()
-            # Get the output from the model after a forward pass until target_layer
-            # with the generated image (randomly generated one, NOT the real image)
 
-            # defining the m mask and weights
+
             m_mask = self.create_m_mask(W_weights, input_image)
 
             background_mask = 1 - m_mask
 
+
+
             new_image_rep = (input_image * m_mask) + (gussian_blur * background_mask)
-            new_image_rep_output = self.model(new_image_rep)[0,target_class]
-            print("output",new_image_rep_output)
+            new_image_rep_output = self.model(new_image_rep)[0, target_class]
+            #p_mask = torch.nn.Softmax(dim=0)
+            #output_mask = p_mask(new_image_rep_output)[target_class]
+            print("front",new_image_rep_output)
+
+
+
 
             rep_background = (input_image * background_mask) + (gussian_blur * m_mask)
-            background_rep_output = self.model(rep_background)[0, target_class]
+            background_rep_output = self.model(rep_background)[0,target_class]
+            #output_background = p_mask(background_rep_output)[target_class]
+            print("back",background_rep_output)
+
 
 
             # Sum all to optimize
@@ -99,13 +106,12 @@ class Disciminative_vgg19():
 
             optimizer.step()
             W_weights = Variable(torch.clamp(W_weights, min= 0.0), requires_grad=True)
-            print(i,"second alg weights sum", W_weights.sum())
+
 
             if i>0 and i % 10 == 0:
                 learining_rate *= 1/2
 
 
-            print(optimizer.param_groups[0]["lr"])
             #for param_group in optimizer.param_groups:
              #   param_group["params"][0] = torch.clamp(param_group["params"][0], min = 0.0)
 
@@ -119,7 +125,7 @@ if __name__ == '__main__':
     # Get params
     original_image_dir = "11.jpg"
     original_image = preprocess_image(original_image_dir)
-    target_class = 340
+    target_class = 386
     gussian_blur = find_gussian_blur(cv2.imread(original_image_dir))
 
     final_mask = Disciminative_vgg19()

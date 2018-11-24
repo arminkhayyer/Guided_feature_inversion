@@ -212,9 +212,10 @@ class Vgg19():
 
 if __name__ == '__main__':
     # Get params
-    original_image_dir = "11.jpg"
-    original_image = preprocess_image(original_image_dir)
-    gussian_blur = find_gussian_blur(cv2.imread(original_image_dir))
+    original_image_dir = "fill.jpg"
+    directory = "input_images/" + original_image_dir
+    original_image = preprocess_image(directory)
+    gussian_blur = find_gussian_blur(cv2.imread(directory))
 
     final_mask = Vgg19()
      # width & height
@@ -250,7 +251,7 @@ if __name__ == '__main__':
 
 
     cv2.imwrite('generated/Inv_Image_Layer_' + original_image_dir, recreated_im)
-    cv2.imwrite("generated/gusblur_"+ original_image_dir, gussian_blur.numpy())
+
     cv2.imwrite("generated/inv_image_"+ original_image_dir, recreated_im[:, :, 2])
     cv2.imwrite("generated/background_mask_" + original_image_dir, recreate_image(1-mask))
 
