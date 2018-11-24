@@ -18,4 +18,4 @@ to use the second algorithm, you need to specify image directory as well as the 
 
 
 first algorithm images: 
-[logo]: https://github.com/arminkhayyer/pytorch/blob/armin/11.jpg
+[logo]: <img src="https://github.com/arminkhayyer/pytorch/blob/armin/11.jpg"> </img>
