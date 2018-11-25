@@ -16,20 +16,33 @@ The second step will find the class discriminative mask for the target object fr
 
 to use the second algorithm, you need to specify image directory as well as the target class of the input image, since VGG19 is used and VGG19 is trained over ImageNet dataset, you can find the target class for each image from [here](https://gist.github.com/yrevar/942d3a0ac09ec9e5eb3a). the output of the second algorithm will be a heat-map and a mask for the target class. 
 
-<img src="https://github.com/arminkhayyer/pytorch/blob/armin/input_images/11.jpg"> </img> input image(target class elephant: 386, zebra: 340)
 
-<h1 style="color:red;">first algorithm results </h1>
-
-<img src="https://github.com/arminkhayyer/pytorch/blob/armin/generated/Inv_Image_Layer_11.jpg"> </img> output saliency image
-
-<img src="https://github.com/arminkhayyer/pytorch/blob/armin/generated/heatmap_11.png"> </img> output heat map 
-
-<h1 style="color:red;">second algorithm results </h1>
-
-<img src="https://github.com/arminkhayyer/pytorch/blob/armin/generated/Inv_Image_Layer_11.jpg"> </img> output saliency image
-
-<img src="https://github.com/arminkhayyer/pytorch/blob/armin/generated/heatmap_discriminative11.png"> </img> output heat map 
-
-
-
+<table>
+<thead>
+  <td>input images</td>
+  <td>first algorithm saliency</td>
+  <td>first algorithm heatmap</td>
+  <td>target class</td>
+  <td>second algorithm saliency</td>
+  <td>second algorithm heatmap</td>
+  </thead>
+  <tbody>
+    <tr>
+    <td><img src="https://github.com/arminkhayyer/pytorch/blob/armin/input_images/11.jpg"> </img></td>
+  <td><img src="https://github.com/arminkhayyer/pytorch/blob/armin/generated/Inv_Image_Layer_11.jpg"> </img></td>
+  <td><img src="https://github.com/arminkhayyer/pytorch/blob/armin/generated/heatmap_11.png"> </img></td>
+  <td>elephant: 386</td>
+  <td><img src="https://github.com/arminkhayyer/pytorch/blob/armin/generated/Inv_Image_Layer_2nd11.jpg"></img></td>
+  <td><img src="https://github.com/arminkhayyer/pytorch/blob/armin/generated/heatmap_discriminative11.png"> </img> </td>
+      </tr>
+      <tr>
+    <td><img src="https://github.com/arminkhayyer/pytorch/blob/armin/input_images/cat_dog.png"> </img></td>
+  <td><img src="https://github.com/arminkhayyer/pytorch/blob/armin/generated/Inv_Image_Layer_cat_dog.png"> </img></td>
+  <td><img src="https://github.com/arminkhayyer/pytorch/blob/armin/generated/heatmap_cat_dog.png"> </img></td>
+  <td>elephant: 243</td>
+  <td><img src=""></img></td>
+  <td><img src="https://github.com/arminkhayyer/pytorch/blob/armin/generated/heatmap_discriminative11.png"> </img> </td>
+      </tr>
+    </tbody>
+</table>
 
