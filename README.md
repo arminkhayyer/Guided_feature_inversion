@@ -36,11 +36,11 @@ to use the second algorithm, you need to specify image directory as well as the 
   <td><img src="https://github.com/arminkhayyer/pytorch/blob/armin/generated/heatmap_discriminative11.png"> </img> </td>
       </tr>
       <tr>
-    <td><img src="https://github.com/arminkhayyer/pytorch/blob/armin/input_images/11.jpg"> </img></td>
-  <td><img src="https://github.com/arminkhayyer/pytorch/blob/armin/generated/Inv_Image_Layer_11.jpg"> </img></td>
-  <td><img src="https://github.com/arminkhayyer/pytorch/blob/armin/generated/heatmap_11.png"> </img></td>
-  <td>elephant: 386</td>
-  <td><img src="https://github.com/arminkhayyer/pytorch/blob/armin/generated/Inv_Image_Layer_2nd11.jpg"></img></td>
+    <td><img src="https://github.com/arminkhayyer/pytorch/blob/armin/input_images/cat_dog.png"> </img></td>
+  <td><img src="https://github.com/arminkhayyer/pytorch/blob/armin/generated/Inv_Image_Layer_cat_dog.png"> </img></td>
+  <td><img src="https://github.com/arminkhayyer/pytorch/blob/armin/generated/heatmap_cat_dog.png"> </img></td>
+  <td>elephant: 243</td>
+  <td><img src=""></img></td>
   <td><img src="https://github.com/arminkhayyer/pytorch/blob/armin/generated/heatmap_discriminative11.png"> </img> </td>
       </tr>
     </tbody>
