@@ -212,7 +212,7 @@ class Vgg19():
 
 if __name__ == '__main__':
     # Get params
-    original_image_dir = "fill.jpg"
+    original_image_dir = "cat_dog.png"
     directory = "input_images/" + original_image_dir
     original_image = preprocess_image(directory)
     gussian_blur = find_gussian_blur(cv2.imread(directory))

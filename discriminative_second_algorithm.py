@@ -123,11 +123,11 @@ class Disciminative_vgg19():
 
 if __name__ == '__main__':
     # Get params
-    original_image_dir = "11.jpg"
+    original_image_dir = "cat_dog.png"
 
     directory = "input_images/" + original_image_dir
     original_image = preprocess_image(directory)
-    target_class = 386
+    target_class = 243
     gussian_blur = find_gussian_blur(cv2.imread(directory))
 
     final_mask = Disciminative_vgg19()
