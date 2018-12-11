@@ -164,109 +164,83 @@ class Disciminative_vgg19():
 
 if __name__ == '__main__':
 
-
-
-
-    df = pd.read_csv("../fall11_urls.txt", delimiter="\t", encoding="latin1", header=None, names=["urls"]).reset_index()
-    tar = tarfile.open("../Annotation.tar.gz")
-    tarname = [tarinfo.name for tarinfo in tar]
+    df = pd.read_csv("picture_data.csv")
     iou_list = []
     alpha_list = np.arange(0, 5.5, .5)
     for alpha in alpha_list:
         iou_inner_list = []
-        for i in range(50, 70):
-            tarname = tarname[i]
-            annot = tar.extract(member=tarname)
-            annot_files = tarfile.open(tarname)
-            xml = [tarinfo.name for tarinfo in annot_files]
-            for j in range(2, 7):
-                try:
-                    xml = xml[j]
-                    xml_anot = annot_files.extract(member=xml)
+        for index , row in df.iterrows():
+            try:
+                img = Image.open(requests.get(row["url"], stream=True).raw)
 
-                    annotation_dict={}
-
-                    tree = ET.parse(xml)
-                    root = tree.getroot()
-
-                    annotation_dict.update({"name": root[1].text})
-                    annotation_dict.update({"size":[i.text for i in root[3]]})
-                    annotation_dict.update({"Bbox":[i.text for i in root[5][4]]})
-                    annotation_dict.update({"url": df.loc[df["index"]== root[1].text, "urls"].values[0]})
+                resp = urllib.request.urlopen(row["url"])
+                image = np.asarray(bytearray(resp.read()), dtype="uint8")
+                image = cv2.imdecode(image, cv2.IMREAD_COLOR)
 
 
-                    print(annotation_dict)
-                    #response = requests.get(annotation_dict["url"])
-                    #img_pil = Image.open(io.BytesIO(response.content))
-                    #img_pil = imageio.imread(io.BytesIO(response.content))
-                    img = Image.open(requests.get(annotation_dict["url"], stream=True).raw)
-
-                    resp = urllib.request.urlopen(annotation_dict["url"])
-                    image = np.asarray(bytearray(resp.read()), dtype="uint8")
-                    image = cv2.imdecode(image, cv2.IMREAD_COLOR)
+                blur = cv2.resize(image, (224, 224))
+                gussian_blur = find_gussian_blur(blur)
 
 
-                    blur = cv2.resize(image, (224, 224))
-                    gussian_blur = find_gussian_blur(blur)
+                preprocessed_img = preprocess_image_eval(img)
+                final_mask = Disciminative_vgg19()
+
+                weights = final_mask.discriminative_mask_and_weights(preprocessed_img, gussian_blur)
+                mask = final_mask.create_m_mask(weights, preprocessed_img)
+                mask = torch.squeeze(mask, 0).permute(2, 1, 0)
 
 
-                    preprocessed_img = preprocess_image_eval(img)
-                    final_mask = Disciminative_vgg19()
-
-                    weights = final_mask.discriminative_mask_and_weights(preprocessed_img, gussian_blur)
-                    mask = final_mask.create_m_mask(weights, preprocessed_img)
-                    mask = torch.squeeze(mask, 0).permute(2, 1, 0)
+                image_size = row["size"][0:2]
+                image_size = tuple([int(i) for i in image_size])
 
 
-                    image_size = annotation_dict["size"][0:2]
-                    image_size = tuple([int(i) for i in image_size])
+                mask_tresh = copy.copy(mask.data.numpy())
+                mask_tresh = cv2.resize(mask_tresh, image_size)
 
+                mask_tresh = cv2.cvtColor(mask_tresh, cv2.COLOR_RGB2GRAY)
+                mask_tresh = cv2.convertScaleAbs(mask_tresh)
+                mean_intensity = mask_tresh.mean()
+                print(mean_intensity)
 
-                    mask_tresh = copy.copy(mask.data.numpy())
-                    mask_tresh = cv2.resize(mask_tresh, image_size)
+                treshhold = alpha * mean_intensity
 
-                    mask_tresh = cv2.cvtColor(mask_tresh, cv2.COLOR_RGB2GRAY)
-                    mask_tresh = cv2.convertScaleAbs(mask_tresh)
-                    mean_intensity = mask_tresh.mean()
-                    print(mean_intensity)
+                ret, thresh = cv2.threshold(mask_tresh, treshhold, 255, cv2.THRESH_BINARY)
 
-                    treshhold = alpha * mean_intensity
+                im2, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+                print(len(contours))
+                c = max(contours, key=cv2.contourArea)
+                index = contours.index(c)
+                print(index)
+                cv2.drawContours(image, contours, -1, (100, 100, 255), 3)
+                x, y, w, h = cv2.boundingRect(c)
 
-                    ret, thresh = cv2.threshold(mask_tresh, treshhold, 255, cv2.THRESH_BINARY)
+                w = x + w
+                h = y + h
+                x_anot = int(row["Bbox"][0])
+                y_anot = int(row["Bbox"][1])
+                w_anot = int(row["Bbox"][2])
+                h_anot = int(row["Bbox"][3])
 
-                    im2, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-                    print(len(contours))
-                    c = max(contours, key=cv2.contourArea)
-                    index = contours.index(c)
-                    print(index)
-                    cv2.drawContours(image, contours, -1, (100, 100, 255), 3)
-                    x, y, w, h = cv2.boundingRect(c)
+                BOUNDING_BOX_pred = [x, y, w, h]
+                BOUNDING_BOX_ANOt = [x_anot, y_anot, w_anot, h_anot]
+                iou = bb_intersection_over_union(BOUNDING_BOX_ANOt, BOUNDING_BOX_pred)
 
-                    w = x + w
-                    h = y + h
-                    x_anot = int(annotation_dict["Bbox"][0])
-                    y_anot = int(annotation_dict["Bbox"][1])
-                    w_anot = int(annotation_dict["Bbox"][2])
-                    h_anot = int(annotation_dict["Bbox"][3])
+                iou_inner_list.append(iou)
 
-                    BOUNDING_BOX_pred = [x, y, w, h]
-                    BOUNDING_BOX_ANOt = [x_anot, y_anot, w_anot, h_anot]
-                    iou = bb_intersection_over_union(BOUNDING_BOX_ANOt, BOUNDING_BOX_pred)
+                cv2.rectangle(image, (x, y), (w, h), (100, 100, 255), 2)
+                cv2.rectangle(image, (x_anot, y_anot), (w_anot, h_anot), (0, 0, 255), 2)
 
-                    iou_inner_list.append(iou)
+                #plt.imshow(image)
+                #plt.imshow(mask.detach(), "gray")
+                #plt.show()
+            except:
+                pass
 
-                    cv2.rectangle(image, (x, y), (w, h), (100, 100, 255), 2)
-                    cv2.rectangle(image, (x_anot, y_anot), (w_anot, h_anot), (0, 0, 255), 2)
-
-                    #plt.imshow(image)
-                    #plt.imshow(mask.detach(), "gray")
-                    #plt.show()
-                except:
-                    pass
         print(iou_inner_list)
         iou_list.append(iou_inner_list)
-
     print(iou_list)
+    df_iou = pd.DataFrame(np.array(iou_list), columns=list("iou"))
+    df_iou.to_csv("iou.csv")
 
 
 
