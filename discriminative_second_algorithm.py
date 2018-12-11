@@ -69,32 +69,29 @@ class Disciminative_vgg19():
 
         weights = Vgg19().optmize_mask_and_weights(input_image=input_image, gussian_blur=gussian_blur)
         W_weights = Variable(weights, requires_grad = True)
+        if torch.cuda.is_available():
+            W_weights = W_weights.cuda()
         learining_rate = 0.01
+
+        p_mask = torch.nn.Softmax(dim=0)
+        output_probability = p_mask(self.model(input_image)[0]).detach()
+        print("output probability",np.argmax(output_probability), output_probability[np.argmax(output_probability)])
 
         for i in range(70):
             optimizer = torch.optim.Adam([W_weights], lr= learining_rate)
             optimizer.zero_grad()
 
-
             m_mask = self.create_m_mask(W_weights, input_image)
-
             background_mask = 1 - m_mask
-
-
 
             new_image_rep = (input_image * m_mask) + (gussian_blur * background_mask)
             new_image_rep_output = self.model(new_image_rep)[0, target_class]
-            #p_mask = torch.nn.Softmax(dim=0)
-            #output_mask = p_mask(new_image_rep_output)[target_class]
-            print("front",new_image_rep_output)
-
 
 
 
             rep_background = (input_image * background_mask) + (gussian_blur * m_mask)
             background_rep_output = self.model(rep_background)[0,target_class]
             #output_background = p_mask(background_rep_output)[target_class]
-            print("back",background_rep_output)
 
 
 
@@ -106,16 +103,12 @@ class Disciminative_vgg19():
 
             optimizer.step()
             W_weights = Variable(torch.clamp(W_weights, min= 0.0), requires_grad=True)
+            if torch.cuda.is_available():
+                W_weights = W_weights.cuda()
 
 
             if i>0 and i % 10 == 0:
                 learining_rate *= 1/2
-
-
-            #for param_group in optimizer.param_groups:
-             #   param_group["params"][0] = torch.clamp(param_group["params"][0], min = 0.0)
-
-            #optimizer.param_groups[0]["params"][0] = torch.clamp(optimizer.param_groups[0]["params"][0], min = 0.0)
 
         return  W_weights
 
@@ -123,7 +116,7 @@ class Disciminative_vgg19():
 
 if __name__ == '__main__':
     # Get params
-    original_image_dir = "cat_dog.png"
+    original_image_dir = "parot.jpg"
 
     directory = "input_images/" + original_image_dir
     original_image = preprocess_image(directory)
@@ -157,6 +150,9 @@ if __name__ == '__main__':
     heatmap[:, :, 3] = 0.5
     heatmap = Image.fromarray((heatmap * 255).astype("uint8"))
     heatmap.save("generated/heatmap_discriminative" + original_image_dir[:-4] + ".png")
+
+
+
 
     cv2.imwrite('generated/Inv_Image_Layer_2nd' + original_image_dir, recreated_im)
     cv2.imwrite("generated/inv_image_2nd" + original_image_dir, recreated_im[:, :, 2])
