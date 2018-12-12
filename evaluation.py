@@ -4,24 +4,17 @@ import pandas as pd
 import numpy as np
 import cv2
 import torch.nn as nn
-import matplotlib.pyplot as plt
+
 import torch
 from torch.autograd import Variable
 from torchvision import models
 from torchvision import transforms
 from PIL import Image
 import torch.optim
-import matplotlib.cm as mpl_color_map
+
 from guided_feature_inversion_convNN import Vgg19, preprocess_image, find_gussian_blur, recreate_image
-import gzip
-from xml.dom import minidom
-import xml.etree.ElementTree as ET
-import io
 import requests
-import skimage
-import torchvision.transforms.functional as F
-import tarfile
-import imageio
+
 import urllib.request
 
 
