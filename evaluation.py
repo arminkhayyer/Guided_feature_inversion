@@ -58,7 +58,7 @@ def bb_intersection_over_union(boxA, boxB):
 
     # return the intersection over union value
     return iou
-device = torch.device('cuda:0' if torch.cuda.is_avaliable() else 'cpu')
+device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 class Disciminative_vgg19():
 
     def __init__(self):
