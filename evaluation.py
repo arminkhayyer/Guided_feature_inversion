@@ -164,7 +164,9 @@ if __name__ == '__main__':
     alpha_list = np.arange(0, 5.5, .5)
     for alpha in alpha_list:
         iou_inner_list = []
-        for index , row in df.iterrows():
+        #for index , row in df.iterrows():
+        for i in range(1):
+            row = df.iloc[1]
             try:
                 img = Image.open(requests.get(row["url"], stream=True).raw)
 
