@@ -167,6 +167,7 @@ if __name__ == '__main__':
         #for index , row in df.iterrows():
         for i in range(1):
             row = df.iloc[1]
+            print("kharrrrr")
             try:
                 img = Image.open(requests.get(row["url"], stream=True).raw)
 
