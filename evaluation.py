@@ -58,12 +58,14 @@ def bb_intersection_over_union(boxA, boxB):
 
     # return the intersection over union value
     return iou
-
+device = torch.device('cuda:0' if torch.cuda.is_avaliable() else 'cpu')
 class Disciminative_vgg19():
 
     def __init__(self):
         super(Disciminative_vgg19, self).__init__()
-        self.model= models.vgg19(pretrained=True)
+        self.model= models.vgg19(pretrained=True).to(device)
+
+
 
         self.model.eval()
         self.select_layers= {"feature_inversion":36, "base_layer":35}
