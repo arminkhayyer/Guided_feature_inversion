@@ -49,7 +49,9 @@ to use the second algorithm, you need to specify image directory as well as the 
 
 Finally, in order to find the localization error according to IOU measures, a python script has been written, evaluation.py. it will run the second algorithm for all the pictures in the imagenet dataset and gives back a csv file which contains all the iou measures, and a graph that shows errors based on different alpha values. 
 
-<img src="https://github.com/arminkhayyer/pytorch/blob/armin/generated/Inv_Image_Layer_cat_dog.png"> </img>
+IOU (intersection over unio) will be calculated as the overlap of the ground truth annotation and tightest rectangle around the object saliency divided by the union area. We get the ground truth from ImageNet validation set and we find the contours of the tresholded saliency map then we find the bounding box around the object contour. with having all the mentioned information we calculate the IOU measure. IOUs less than 0.5 are considered as errors. 
+
+<img style="height:100" src="https://github.com/arminkhayyer/pytorch/blob/armin/generated/Screen%20Shot%202018-12-10%20at%205.34.15%20PM.png"> </img>
 
 
 
