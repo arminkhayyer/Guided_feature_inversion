@@ -4,17 +4,17 @@ import pandas as pd
 import numpy as np
 import cv2
 import torch.nn as nn
-
+import matplotlib.pyplot as plt
 import torch
 from torch.autograd import Variable
 from torchvision import models
 from torchvision import transforms
 from PIL import Image
 import torch.optim
-
+import time
 from guided_feature_inversion_convNN import Vgg19, preprocess_image, find_gussian_blur, recreate_image
 import requests
-
+import ast
 import urllib.request
 
 
@@ -58,20 +58,18 @@ def bb_intersection_over_union(boxA, boxB):
 
     # return the intersection over union value
     return iou
-device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+
 class Disciminative_vgg19():
 
     def __init__(self):
         super(Disciminative_vgg19, self).__init__()
-        self.model= models.vgg19(pretrained=True).to(device)
-
+        self.model= models.vgg19(pretrained=True)
 
 
         self.model.eval()
         self.select_layers= {"feature_inversion":36, "base_layer":35}
         if not os.path.exists('generated'):
             os.makedirs('generated')
-
 
     def forward(self, x):
         """Extract multiple convolutional feature maps."""
@@ -111,8 +109,7 @@ class Disciminative_vgg19():
 
         weights = Vgg19().optmize_mask_and_weights(input_image=input_image, gussian_blur=gussian_blur)
         W_weights = Variable(weights, requires_grad = True)
-        if torch.cuda.is_available():
-            W_weights = W_weights.cuda()
+
         learining_rate = 0.01
 
         p_mask = torch.nn.Softmax(dim=0)
@@ -146,9 +143,6 @@ class Disciminative_vgg19():
 
             optimizer.step()
             W_weights = Variable(torch.clamp(W_weights, min= 0.0), requires_grad=True)
-            if torch.cuda.is_available():
-                W_weights = W_weights.cuda()
-
 
             if i>0 and i % 10 == 0:
                 learining_rate *= 1/2
@@ -161,84 +155,90 @@ if __name__ == '__main__':
 
     df = pd.read_csv("picture_data.csv")
     iou_list = []
-    alpha_list = np.arange(0, 5.5, .5)
-    for alpha in alpha_list:
+    #alpha_list = np.arange(0, 5.5, .5)
+    for alpha in [1]:
         iou_inner_list = []
         #for index , row in df.iterrows():
         for i in range(1):
-            row = df.iloc[1]
-            print("kharrrrr")
-            try:
-                img = Image.open(requests.get(row["url"], stream=True).raw)
+            start = time.time()
+            row = df.iloc[20]
+            #try:
+            img = Image.open(requests.get(row["url"], stream=True).raw)
 
-                resp = urllib.request.urlopen(row["url"])
-                image = np.asarray(bytearray(resp.read()), dtype="uint8")
-                image = cv2.imdecode(image, cv2.IMREAD_COLOR)
-
-
-                blur = cv2.resize(image, (224, 224))
-                gussian_blur = find_gussian_blur(blur)
+            resp = urllib.request.urlopen(row["url"])
+            image = np.asarray(bytearray(resp.read()), dtype="uint8")
+            image = cv2.imdecode(image, cv2.IMREAD_COLOR)
 
 
-                preprocessed_img = preprocess_image_eval(img)
-                final_mask = Disciminative_vgg19()
-
-                weights = final_mask.discriminative_mask_and_weights(preprocessed_img, gussian_blur)
-                mask = final_mask.create_m_mask(weights, preprocessed_img)
-                mask = torch.squeeze(mask, 0).permute(2, 1, 0)
+            blur = cv2.resize(image, (224, 224))
+            gussian_blur = find_gussian_blur(blur)
 
 
-                image_size = row["size"][0:2]
-                image_size = tuple([int(i) for i in image_size])
+            preprocessed_img = preprocess_image_eval(img)
+            final_mask = Disciminative_vgg19()
+
+            weights = final_mask.discriminative_mask_and_weights(preprocessed_img, gussian_blur)
+            mask = final_mask.create_m_mask(weights, preprocessed_img)
+            mask = torch.squeeze(mask, 0).permute(2, 1, 0)
+
+            image_size = row["size"]
+            image_size = ast.literal_eval(image_size)[0:2]
+            image_size = tuple([int(i) for i in image_size])
 
 
-                mask_tresh = copy.copy(mask.data.numpy())
-                mask_tresh = cv2.resize(mask_tresh, image_size)
+            mask_tresh = copy.copy(mask.data.numpy())
+            mask_tresh = cv2.resize(mask_tresh, image_size)
 
-                mask_tresh = cv2.cvtColor(mask_tresh, cv2.COLOR_RGB2GRAY)
-                mask_tresh = cv2.convertScaleAbs(mask_tresh)
-                mean_intensity = mask_tresh.mean()
-                print(mean_intensity)
+            mask_tresh = cv2.cvtColor(mask_tresh, cv2.COLOR_RGB2GRAY)
+            mask_tresh = cv2.convertScaleAbs(mask_tresh)
+            mean_intensity = mask_tresh.mean()
+            print(mean_intensity)
 
-                treshhold = alpha * mean_intensity
+            treshhold = alpha * mean_intensity
 
-                ret, thresh = cv2.threshold(mask_tresh, treshhold, 255, cv2.THRESH_BINARY)
+            ret, thresh = cv2.threshold(mask_tresh, treshhold, 255, cv2.THRESH_BINARY)
 
-                im2, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-                print(len(contours))
-                c = max(contours, key=cv2.contourArea)
-                index = contours.index(c)
-                print(index)
-                cv2.drawContours(image, contours, -1, (100, 100, 255), 3)
-                x, y, w, h = cv2.boundingRect(c)
+            im2, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+            print(len(contours))
+            c = max(contours, key=cv2.contourArea)
+            index = contours.index(c)
 
-                w = x + w
-                h = y + h
-                x_anot = int(row["Bbox"][0])
-                y_anot = int(row["Bbox"][1])
-                w_anot = int(row["Bbox"][2])
-                h_anot = int(row["Bbox"][3])
+            cv2.drawContours(image, contours, index, (100, 100, 255), 3)
+            x, y, w, h = cv2.boundingRect(c)
 
-                BOUNDING_BOX_pred = [x, y, w, h]
-                BOUNDING_BOX_ANOt = [x_anot, y_anot, w_anot, h_anot]
-                iou = bb_intersection_over_union(BOUNDING_BOX_ANOt, BOUNDING_BOX_pred)
+            w = x + w
+            h = y + h
 
-                iou_inner_list.append(iou)
+            anotation = row["Bbox"]
+            anotation = ast.literal_eval(anotation)
 
-                cv2.rectangle(image, (x, y), (w, h), (100, 100, 255), 2)
-                cv2.rectangle(image, (x_anot, y_anot), (w_anot, h_anot), (0, 0, 255), 2)
+            x_anot = int(anotation[0])
+            y_anot = int(anotation[1])
+            w_anot = int(anotation[2])
+            h_anot = int(anotation[3])
 
-                #plt.imshow(image)
-                #plt.imshow(mask.detach(), "gray")
-                #plt.show()
-            except:
-                pass
+            BOUNDING_BOX_pred = [x, y, w, h]
+            BOUNDING_BOX_ANOt = [x_anot, y_anot, w_anot, h_anot]
+            iou = bb_intersection_over_union(BOUNDING_BOX_ANOt, BOUNDING_BOX_pred)
+
+            iou_inner_list.append(iou)
+
+            cv2.rectangle(image, (x, y), (w, h), (0, 0, 255), 2)
+            cv2.rectangle(image, (x_anot, y_anot), (w_anot, h_anot), (255, 0, 0), 2)
+
+            plt.imshow(image)
+            #plt.imshow(mask.detach(), "gray")
+            plt.show()
+            #except:
+             #   pass
+            end = time.time()
+            print(end - start)
 
         print(iou_inner_list)
         iou_list.append(iou_inner_list)
     print(iou_list)
-    df_iou = pd.DataFrame(np.array(iou_list), columns=list("iou"))
-    df_iou.to_csv("iou.csv")
+    #df_iou = pd.DataFrame(np.array(iou_list), columns=list("iou"))
+    #df_iou.to_csv("iou.csv")
 
 
 
