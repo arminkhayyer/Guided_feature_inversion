@@ -51,7 +51,7 @@ Finally, in order to find the localization error according to IOU measures, a py
 
 IOU (intersection over unio) will be calculated as the overlap of the ground truth annotation and tightest rectangle around the object saliency divided by the union area. We get the ground truth from ImageNet validation set and we find the contours of the tresholded saliency map then we find the bounding box around the object contour. with having all the mentioned information we calculate the IOU measure. IOUs less than 0.5 are considered as errors. 
 
-<img style="height:100" src="https://github.com/arminkhayyer/pytorch/blob/armin/generated/Screen%20Shot%202018-12-10%20at%205.34.15%20PM.png"> </img>
+<img style="height:100px" src="https://github.com/arminkhayyer/pytorch/blob/armin/generated/Screen%20Shot%202018-12-13%20at%2011.36.28%20PM.png"> </img>
 
 
 
