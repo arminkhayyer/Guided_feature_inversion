@@ -155,82 +155,80 @@ if __name__ == '__main__':
 
     df = pd.read_csv("picture_data.csv")
     iou_list = []
-    #alpha_list = np.arange(0, 5.5, .5)
-    for alpha in [1]:
+    alpha_list = np.arange(0, 5.5, .5)
+    for alpha in alpha_list:
         iou_inner_list = []
-        #for index , row in df.iterrows():
-        for i in range(1):
+        for index , row in df.iterrows():
             start = time.time()
-            row = df.iloc[20]
-            #try:
-            img = Image.open(requests.get(row["url"], stream=True).raw)
+            try:
+                img = Image.open(requests.get(row["url"], stream=True).raw)
 
-            resp = urllib.request.urlopen(row["url"])
-            image = np.asarray(bytearray(resp.read()), dtype="uint8")
-            image = cv2.imdecode(image, cv2.IMREAD_COLOR)
-
-
-            blur = cv2.resize(image, (224, 224))
-            gussian_blur = find_gussian_blur(blur)
+                resp = urllib.request.urlopen(row["url"])
+                image = np.asarray(bytearray(resp.read()), dtype="uint8")
+                image = cv2.imdecode(image, cv2.IMREAD_COLOR)
 
 
-            preprocessed_img = preprocess_image_eval(img)
-            final_mask = Disciminative_vgg19()
-
-            weights = final_mask.discriminative_mask_and_weights(preprocessed_img, gussian_blur)
-            mask = final_mask.create_m_mask(weights, preprocessed_img)
-            mask = torch.squeeze(mask, 0).permute(2, 1, 0)
-
-            image_size = row["size"]
-            image_size = ast.literal_eval(image_size)[0:2]
-            image_size = tuple([int(i) for i in image_size])
+                blur = cv2.resize(image, (224, 224))
+                gussian_blur = find_gussian_blur(blur)
 
 
-            mask_tresh = copy.copy(mask.data.numpy())
-            mask_tresh = cv2.resize(mask_tresh, image_size)
+                preprocessed_img = preprocess_image_eval(img)
+                final_mask = Disciminative_vgg19()
 
-            mask_tresh = cv2.cvtColor(mask_tresh, cv2.COLOR_RGB2GRAY)
-            mask_tresh = cv2.convertScaleAbs(mask_tresh)
-            mean_intensity = mask_tresh.mean()
-            print(mean_intensity)
+                weights = final_mask.discriminative_mask_and_weights(preprocessed_img, gussian_blur)
+                mask = final_mask.create_m_mask(weights, preprocessed_img)
+                mask = torch.squeeze(mask, 0).permute(2, 1, 0)
 
-            treshhold = alpha * mean_intensity
+                image_size = row["size"]
+                image_size = ast.literal_eval(image_size)[0:2]
+                image_size = tuple([int(i) for i in image_size])
 
-            ret, thresh = cv2.threshold(mask_tresh, treshhold, 255, cv2.THRESH_BINARY)
 
-            im2, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-            print(len(contours))
-            c = max(contours, key=cv2.contourArea)
-            index = contours.index(c)
+                mask_tresh = copy.copy(mask.data.numpy())
+                mask_tresh = cv2.resize(mask_tresh, image_size)
 
-            cv2.drawContours(image, contours, index, (100, 100, 255), 3)
-            x, y, w, h = cv2.boundingRect(c)
+                mask_tresh = cv2.cvtColor(mask_tresh, cv2.COLOR_RGB2GRAY)
+                mask_tresh = cv2.convertScaleAbs(mask_tresh)
+                mean_intensity = mask_tresh.mean()
+                print(mean_intensity)
 
-            w = x + w
-            h = y + h
+                treshhold = alpha * mean_intensity
 
-            anotation = row["Bbox"]
-            anotation = ast.literal_eval(anotation)
+                ret, thresh = cv2.threshold(mask_tresh, treshhold, 255, cv2.THRESH_BINARY)
 
-            x_anot = int(anotation[0])
-            y_anot = int(anotation[1])
-            w_anot = int(anotation[2])
-            h_anot = int(anotation[3])
+                im2, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+                print(len(contours))
+                c = max(contours, key=cv2.contourArea)
+                index = contours.index(c)
 
-            BOUNDING_BOX_pred = [x, y, w, h]
-            BOUNDING_BOX_ANOt = [x_anot, y_anot, w_anot, h_anot]
-            iou = bb_intersection_over_union(BOUNDING_BOX_ANOt, BOUNDING_BOX_pred)
+                cv2.drawContours(image, contours, index, (100, 100, 255), 3)
+                x, y, w, h = cv2.boundingRect(c)
 
-            iou_inner_list.append(iou)
+                w = x + w
+                h = y + h
 
-            cv2.rectangle(image, (x, y), (w, h), (0, 0, 255), 2)
-            cv2.rectangle(image, (x_anot, y_anot), (w_anot, h_anot), (255, 0, 0), 2)
+                anotation = row["Bbox"]
+                anotation = ast.literal_eval(anotation)
 
-            plt.imshow(image)
-            #plt.imshow(mask.detach(), "gray")
-            plt.show()
-            #except:
-             #   pass
+                x_anot = int(anotation[0])
+                y_anot = int(anotation[1])
+                w_anot = int(anotation[2])
+                h_anot = int(anotation[3])
+
+                BOUNDING_BOX_pred = [x, y, w, h]
+                BOUNDING_BOX_ANOt = [x_anot, y_anot, w_anot, h_anot]
+                iou = bb_intersection_over_union(BOUNDING_BOX_ANOt, BOUNDING_BOX_pred)
+
+                iou_inner_list.append(iou)
+
+                cv2.rectangle(image, (x, y), (w, h), (0, 0, 255), 2)
+                cv2.rectangle(image, (x_anot, y_anot), (w_anot, h_anot), (255, 0, 0), 2)
+
+                plt.imshow(image)
+                #plt.imshow(mask.detach(), "gray")
+                plt.show()
+            except:
+                pass
             end = time.time()
             print(end - start)
 
