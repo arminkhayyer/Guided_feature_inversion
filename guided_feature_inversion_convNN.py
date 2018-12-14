@@ -170,7 +170,11 @@ if __name__ == '__main__':
     original_image_dir = "parot.jpg"
     directory = "input_images/" + original_image_dir
     original_image = preprocess_image(directory)
-    gussian_blur = find_gussian_blur(cv2.imread(directory))
+
+    image = cv2.imread(directory)
+    blur = cv2.resize(image, (224, 224))
+    gussian_blur = find_gussian_blur(blur)
+
 
     final_mask = Vgg19()
      # width & height
